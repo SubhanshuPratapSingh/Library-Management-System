@@ -30,66 +30,54 @@ class Book {
 }
 
 class Library {
-    private List<Book> books;
-
-    public Library() {
-        this.books = new ArrayList<>();
-    }
+    private List<Book> books = new ArrayList<>();
 
     public void addBook(String title, String author) {
-        Book book = new Book(title, author);
-        books.add(book);
+        books.add(new Book(title, author));
     }
 
     public void searchBook(String keyword) {
-        List<Book> searchResults = new ArrayList<>();
-
+        boolean found = false;
         for (Book book : books) {
-            if (book.getTitle().contains(keyword) || book.getAuthor().contains(keyword)) {
-                searchResults.add(book);
+            if (book.getTitle().toLowerCase().contains(keyword.toLowerCase())
+                    || book.getAuthor().toLowerCase().contains(keyword.toLowerCase())) {
+                System.out.println(book.getTitle() + " by " + book.getAuthor());
+                found = true;
             }
         }
-
-        if (searchResults.isEmpty()) {
-            System.out.println("No books found matching the search keyword.");
-        } else {
-            System.out.println("Search results:");
-            for (Book book : searchResults) {
-                System.out.println(book.getTitle() + " by " + book.getAuthor());
-            }
+        if (!found) {
+            System.out.println("No books found.");
         }
     }
 
     public void checkoutBook(String title) {
         for (Book book : books) {
-            if (book.getTitle().equals(title)) {
+            if (book.getTitle().equalsIgnoreCase(title)) {
                 if (!book.isCheckedOut()) {
                     book.setCheckedOut(true);
-                    System.out.println("Book '" + title + "' checked out successfully.");
+                    System.out.println("Book checked out successfully.");
                 } else {
-                    System.out.println("Book '" + title + "' is already checked out.");
+                    System.out.println("Book already checked out.");
                 }
                 return;
             }
         }
-
-        System.out.println("Book '" + title + "' not found in the library.");
+        System.out.println("Book not found.");
     }
 
     public void returnBook(String title) {
         for (Book book : books) {
-            if (book.getTitle().equals(title)) {
+            if (book.getTitle().equalsIgnoreCase(title)) {
                 if (book.isCheckedOut()) {
                     book.setCheckedOut(false);
-                    System.out.println("Book '" + title + "' returned successfully.");
+                    System.out.println("Book returned successfully.");
                 } else {
-                    System.out.println("Book '" + title + "' is not checked out.");
+                    System.out.println("Book was not checked out.");
                 }
                 return;
             }
         }
-
-        System.out.println("Book '" + title + "' not found in the library.");
+        System.out.println("Book not found.");
     }
 
     public void saveBooksToFile(String filename) {
@@ -97,97 +85,86 @@ class Library {
             for (Book book : books) {
                 writer.println(book.getTitle() + "," + book.getAuthor() + "," + book.isCheckedOut());
             }
-            System.out.println("Books saved to file: " + filename);
-        } catch (IOException e) {
-            System.out.println("Error saving books to file: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error saving file.");
         }
     }
 
     public void loadBooksFromFile(String filename) {
         try (Scanner scanner = new Scanner(new File(filename))) {
-            books.clear();
             while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] parts = line.split(",");
-                String title = parts[0];
-                String author = parts[1];
-                boolean checkedOut = Boolean.parseBoolean(parts[2]);
-                Book book = new Book(title, author);
-                book.setCheckedOut(checkedOut);
+                String[] data = scanner.nextLine().split(",");
+                Book book = new Book(data[0], data[1]);
+                book.setCheckedOut(Boolean.parseBoolean(data[2]));
                 books.add(book);
             }
-            System.out.println("Books loaded from file: " + filename);
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + filename);
+        } catch (Exception e) {
+            System.out.println("No previous data found.");
         }
     }
 }
 
 public class LibraryManagementSystem {
-    public static void RunLibraryManagementSystem(String[] args) {
-        Library library = new Library();
 
-        // Loading books from a file (if available)
+    // ✅ ENTRY POINT
+    public static void main(String[] args) {
+
+        Library library = new Library();
         library.loadBooksFromFile("library.txt");
 
         Scanner scanner = new Scanner(System.in);
         int choice = -1;
 
         while (choice != 0) {
-            System.out.println("----- Library Management System -----");
-            System.out.println("1. Add a book");
-            System.out.println("2. Search for books");
-            System.out.println("3. Check out a book");
-            System.out.println("4. Return a book");
+            System.out.println("\n----- Library Management System -----");
+            System.out.println("1. Add Book");
+            System.out.println("2. Search Book");
+            System.out.println("3. Check Out Book");
+            System.out.println("4. Return Book");
             System.out.println("0. Exit");
-            System.out.print("Enter your choice: ");
+            System.out.print("Enter choice: ");
 
             if (scanner.hasNextInt()) {
                 choice = scanner.nextInt();
-                scanner.nextLine(); // Consume newline character
-                System.out.println();
+                scanner.nextLine();
 
                 switch (choice) {
                     case 1:
-                        System.out.print("Enter the title of the book: ");
+                        System.out.print("Title: ");
                         String title = scanner.nextLine();
-                        System.out.print("Enter the author of the book: ");
+                        System.out.print("Author: ");
                         String author = scanner.nextLine();
                         library.addBook(title, author);
-                        System.out.println("Book added successfully.\n");
                         break;
+
                     case 2:
-                        System.out.print("Enter the search keyword: ");
-                        String keyword = scanner.nextLine();
-                        library.searchBook(keyword);
-                        System.out.println();
+                        System.out.print("Keyword: ");
+                        library.searchBook(scanner.nextLine());
                         break;
+
                     case 3:
-                        System.out.print("Enter the title of the book to check out: ");
-                        String checkoutTitle = scanner.nextLine();
-                        library.checkoutBook(checkoutTitle);
-                        System.out.println();
+                        System.out.print("Book title: ");
+                        library.checkoutBook(scanner.nextLine());
                         break;
+
                     case 4:
-                        System.out.print("Enter the title of the book to return: ");
-                        String returnTitle = scanner.nextLine();
-                        library.returnBook(returnTitle);
-                        System.out.println();
+                        System.out.print("Book title: ");
+                        library.returnBook(scanner.nextLine());
                         break;
+
                     case 0:
-                        // Saving books to a file
                         library.saveBooksToFile("library.txt");
+                        System.out.println("Exiting...");
                         break;
+
                     default:
-                        System.out.println("Invalid choice. Please try again.\n");
+                        System.out.println("Invalid choice.");
                 }
             } else {
-                System.out.println("Invalid input. Please try again.\n");
-                scanner.nextLine(); // Consume invalid input
+                System.out.println("Invalid input.");
+                scanner.nextLine();
             }
         }
-
-       // scanner.close();
+        scanner.close();
     }
 }
-
